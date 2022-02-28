@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  mysql-db-node:
+    image: mysql:5.7
+    env_file: ./.env
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      MYSQL_DATABASE: $MYSQL_DATABASE
+    ports:
+      - $MYSQL_LOCAL_PORT:$MYSQL_DOCKER_PORT
+    volumes:
+      - db-config:/etc/mysql
+      - db-data:/var/lib/mysql
+      - ./db/backup/files/:/data_backup/data
+    networks:
+      - node-api
+
+  server-app:
+    build:
+      context: .
+      dockerfile: ./docker/node.dockerfile
+    image: node-app
+    container_name: server-app
+    env_file: ./.env
+    ports:
+      - $NODE_LOCAL_PORT:$NODE_DOCKER_PORT
+    depends_on:
+      - mysql-db-node
+    stdin_open: true
+    tty: true
+    networks:
+      - node-api
+
+  phpmyadmin-node-api:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    ports:
+      - 9306:80
+    depends_on:
+      - mysql-db-node
+    environment:
+      - PMA_HOST=mysql-db-node
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+
+networks:
+  node-api:
+    driver: bridge
+
+volumes:
+  db-config:
+  db-data:
