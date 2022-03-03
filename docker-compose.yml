@@ -24,8 +24,10 @@ services:
     image: node-app
     container_name: server-app
     env_file: ./.env
+    command: yarn start:debug
     ports:
       - $NODE_LOCAL_PORT:$NODE_DOCKER_PORT
+      - 9229:9229
     depends_on:
       - mysql-db-node
     stdin_open: true
